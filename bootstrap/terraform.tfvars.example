@@ -1,2 +1,4 @@
 subscription_id      = "00000000-0000-0000-0000-000000000000"
 storage_account_name = "sttfstate<yourname>01"
+github_org  = "your-github-username"
+github_repo = "terraform-azure-foundation"
