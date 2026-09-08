@@ -1,0 +1,62 @@
+name: terraform
+
+on:
+  pull_request:
+    paths:
+      - 'envs/**'
+      - 'modules/**'
+  push:
+    branches: [main]
+    paths:
+      - 'envs/**'
+      - 'modules/**'
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+env:
+  ARM_CLIENT_ID:       ${{ vars.AZURE_CLIENT_ID }}
+  ARM_TENANT_ID:       ${{ vars.AZURE_TENANT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+  ARM_USE_OIDC:        true
+  TF_VAR_subscription_id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    environment: dev
+    defaults:
+      run:
+        working-directory: envs/dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+
+      - name: Format check
+        run: terraform fmt -check -recursive
+        working-directory: .
+
+      - name: Init
+        run: terraform init -backend-config=backend.hcl
+
+      - name: Validate
+        run: terraform validate
+
+      - name: Plan
+        run: terraform plan -no-color
+
+  apply:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: plan
+    runs-on: ubuntu-latest
+    environment: dev
+    defaults:
+      run:
+        working-directory: envs/dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - run: terraform init -backend-config=backend.hcl
+      - run: terraform apply -auto-approve
