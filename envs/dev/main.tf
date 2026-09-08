@@ -10,6 +10,7 @@ locals {
     environment = var.environment
     managed_by  = "terraform"
     project     = "terraform-azure-foundation"
+    owner       = "rk"
   }
 }
 
