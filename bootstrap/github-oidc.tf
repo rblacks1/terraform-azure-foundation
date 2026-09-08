@@ -12,11 +12,15 @@ resource "azuread_service_principal" "gh_actions" {
 
 # One credential per context. Subjects are matched on an exact string,
 # so there is no wildcarding your way out of this.
+# GitHub uses immutable subject claims for repos created after 15 July 2026.
+# Names alone are not enough, the numeric owner and repo IDs are part of the subject.
 locals {
+  repo_claim = "repo:${var.github_org}@${var.github_owner_id}/${var.github_repo}@${var.github_repo_id}"
+
   federated_subjects = {
-    "gh-pull-request" = "repo:${var.github_org}/${var.github_repo}:pull_request"
-    "gh-env-dev"      = "repo:${var.github_org}/${var.github_repo}:environment:dev"
-    "gh-env-prod"     = "repo:${var.github_org}/${var.github_repo}:environment:prod"
+    "gh-pull-request" = "${local.repo_claim}:pull_request"
+    "gh-env-dev"      = "${local.repo_claim}:environment:dev"
+    "gh-env-prod"     = "${local.repo_claim}:environment:prod"
   }
 }
 
